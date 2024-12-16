@@ -203,7 +203,7 @@ class Download(PluginTopic):
             or tempfile.gettempdir()
         )
         output_extension = kwargs.get("output_extension", None) or getattr(
-            self.config, "output_extension", ".zip"
+            self.config, "output_extension", None
         )
 
         # Strong asumption made here: all products downloaded will be zip files
@@ -216,8 +216,16 @@ class Download(PluginTopic):
             collision_avoidance_suffix = "-" + sanitize(product.properties["id"])
         fs_path = os.path.join(
             prefix,
-            f"{sanitize(product.properties['title'])}{collision_avoidance_suffix}{output_extension}",
+            f"{sanitize(product.properties['title'])}{collision_avoidance_suffix}"
         )
+        if output_extension:
+            fs_path += output_extension
+        elif hasattr(self, '_check_product_filename'):
+            filename = self._check_product_filename(product)
+            if filename:
+                _, ext = os.path.splitext(filename)
+                if ext:
+                    fs_path += ext
         fs_dir_path = (
             fs_path.replace(output_extension, "") if output_extension else fs_path
         )
