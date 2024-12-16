@@ -2254,8 +2254,8 @@ class TestDownloadPluginCreodiasS3(BaseDownloadPluginTest):
         self.assertEqual(mock_flatten_top_directories.call_count, 1)
 
     @mock.patch("eodag.plugins.download.http.requests.Session.request", autospec=True)
-    def test_plugins_download_http_uses_content_disposition_extension(self, mock_requests_session):
-        """HTTPDownload.download() must use content-disposition filename extension instead of default .zip"""
+    def test_plugins_download_http_uses_checked_filename_extension(self, mock_requests_session):
+        """HTTPDownload.download() must use extension from _check_product_filename"""
         
         provider = "provider1"
         download_url = "https://example.com/data.tiff"
@@ -2269,8 +2269,8 @@ class TestDownloadPluginCreodiasS3(BaseDownloadPluginTest):
             "downloadLink": download_url,
         }
         
-        self.product = EOProduct(provider, eoproduct_props)
-        plugin = self.get_download_plugin(self.product)
+        product = self._dummy_product(provider, eoproduct_props, product_type)
+        plugin = self.get_download_plugin(product)
         
         # Mock response with content-disposition header
         mock_response = mock.MagicMock()
@@ -2282,9 +2282,9 @@ class TestDownloadPluginCreodiasS3(BaseDownloadPluginTest):
         mock_requests_session.return_value.__enter__.return_value = mock_response
         
         # Download the product
-        path = plugin.download(self.product, output_dir=self.output_dir)
+        path = plugin.download(product, output_dir=self.output_dir)
         
-        # Verify the downloaded file has .tiff extension from content-disposition
+        # Verify the downloaded file has .tiff extension from _check_product_filename
         self.assertTrue(os.path.exists(path))
         self.assertTrue(path.endswith(".tiff"))
         self.assertFalse(path.endswith(".zip"))

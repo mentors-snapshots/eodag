@@ -171,9 +171,11 @@ class Download(PluginTopic):
         progress_callback: Optional[ProgressCallback] = None,
         **kwargs: Unpack[DownloadConf],
     ) -> Tuple[Optional[str], Optional[str]]:
-        """Prepare product download
-        
-        Returns fs_path, record_filename
+        """Check if file has already been downloaded, and prepare product download
+
+        :param product: The EO product to download
+        :param progress_callback: (optional) A progress callback
+        :returns: fs_path, record_filename
         """
         if product.location != product.remote_location:
             fs_path = uri_to_path(product.location)
@@ -200,21 +202,28 @@ class Download(PluginTopic):
             or getattr(self.config, "output_dir", tempfile.gettempdir())
             or tempfile.gettempdir()
         )
-        
-        # Remove default .zip extension - let _check_product_filename determine it
-        output_extension = kwargs.get("output_extension", None) or getattr(
-            self.config, "output_extension", None
-        )
 
-        # Use sanitized title without forcing extension
+        # Get extension from _check_product_filename if available
+        if hasattr(self, '_check_product_filename'):
+            checked_filename = self._check_product_filename(product)
+            if checked_filename:
+                output_extension = os.path.splitext(checked_filename)[1]
+            else:
+                output_extension = kwargs.get("output_extension", None) or getattr(
+                    self.config, "output_extension", None
+                )
+        else:
+            output_extension = kwargs.get("output_extension", None) or getattr(
+                self.config, "output_extension", None
+            )
+
         prefix = os.path.abspath(output_dir)
         sanitized_title = sanitize(product.properties["title"])
         if sanitized_title == product.properties["title"]:
             collision_avoidance_suffix = ""
         else:
             collision_avoidance_suffix = "-" + sanitize(product.properties["id"])
-        
-        # Only add extension if explicitly provided
+
         fs_path = os.path.join(
             prefix,
             f"{sanitize(product.properties['title'])}{collision_avoidance_suffix}"
