@@ -202,22 +202,35 @@ class Download(PluginTopic):
             or getattr(self.config, "output_dir", tempfile.gettempdir())
             or tempfile.gettempdir()
         )
-        output_extension = kwargs.get("output_extension", None) or getattr(
-            self.config, "output_extension", ".zip"
-        )
 
-        # Strong asumption made here: all products downloaded will be zip files
-        # If they are not, the '.zip' extension will be removed when they are downloaded and returned as is
+        # Get extension from _check_product_filename if available
+        if hasattr(self, '_check_product_filename'):
+            checked_filename = self._check_product_filename(product)
+            if checked_filename:
+                output_extension = os.path.splitext(checked_filename)[1]
+            else:
+                output_extension = kwargs.get("output_extension", None) or getattr(
+                    self.config, "output_extension", None
+                )
+        else:
+            output_extension = kwargs.get("output_extension", None) or getattr(
+                self.config, "output_extension", None
+            )
+
         prefix = os.path.abspath(output_dir)
         sanitized_title = sanitize(product.properties["title"])
         if sanitized_title == product.properties["title"]:
             collision_avoidance_suffix = ""
         else:
             collision_avoidance_suffix = "-" + sanitize(product.properties["id"])
+
         fs_path = os.path.join(
             prefix,
-            f"{sanitize(product.properties['title'])}{collision_avoidance_suffix}{output_extension}",
+            f"{sanitize(product.properties['title'])}{collision_avoidance_suffix}"
         )
+        if output_extension:
+            fs_path += output_extension
+        
         fs_dir_path = (
             fs_path.replace(output_extension, "") if output_extension else fs_path
         )
