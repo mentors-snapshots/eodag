@@ -220,6 +220,13 @@ class Download(PluginTopic):
         )
         if output_extension:
             fs_path += output_extension
+        elif hasattr(self, '_check_product_filename'):
+            filename = self._check_product_filename(product)
+            if filename:
+                _, ext = os.path.splitext(filename)
+                if ext:
+                    fs_path += ext
+
         fs_dir_path = (
             fs_path.replace(output_extension, "") if output_extension else fs_path
         )

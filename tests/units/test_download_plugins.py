@@ -554,6 +554,51 @@ class TestDownloadPluginHttp(BaseDownloadPluginTest):
             and os.path.isfile(path)
         )
 
+        class MockResponse:
+            def __init__(self):
+                self.headers = {
+                    "content-disposition": 'attachment; filename="product.nc"',
+                    "content-length": "1024"
+                }
+                self.url = download_url
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                pass
+
+            def iter_content(self, **kwargs):
+                yield b"test"
+
+            def raise_for_status(self):
+                pass
+
+        mock_requests_session.return_value = MockResponse()
+
+        eoproduct_props = {
+            "id": "test_id",
+            "title": local_filename,
+            "downloadLink": download_url,
+            "productType": product_type,
+        }
+        dl_config = config.PluginConfig.from_mapping({
+            "base_uri": "fake_base_uri",
+            "output_dir": self.output_dir,
+            "extract": False,
+            "delete_archive": False,
+        })
+        downloader = HTTPDownload(provider=provider, config=dl_config)
+        product = self._dummy_product(provider, eoproduct_props, product_type)
+        product.register_downloader(downloader, None)
+
+        path = product.download()
+
+        self.assertTrue(
+            path == os.path.join(self.output_dir, f"{local_filename}.nc")
+            and os.path.isfile(path)
+        )
+
         mock_requests_session.assert_called_once_with(
             mock.ANY,
             "get",
@@ -566,6 +611,7 @@ class TestDownloadPluginHttp(BaseDownloadPluginTest):
             verify=True,
         )
 
+>>>>>>> origin/devin/1734374297-flexible-download-extensions
     @mock.patch(
         "eodag.plugins.download.http.HTTPDownload._stream_download", autospec=True
     )
