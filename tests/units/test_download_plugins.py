@@ -1493,6 +1493,37 @@ class TestDownloadPluginHttp(BaseDownloadPluginTest):
 
         run()
 
+    def test_plugins_download_http_get_rio_env_with_headers(self):
+        """HTTPDownload.get_rio_env should return GDAL headers when headers are present"""
+        headers = {"Authorization": "Bearer token", "Accept": "application/json"}
+        self.product.headers = headers
+        plugin = self.get_download_plugin(self.product)
+        plugin.stream = mock.MagicMock()
+        plugin.stream.headers = headers
+
+        env = plugin.get_rio_env()
+
+        expected_headers = "Authorization: Bearer token\r\nAccept: application/json"
+        self.assertEqual(env, {"GDAL_HTTP_HEADERS": expected_headers})
+
+    def test_plugins_download_http_get_rio_env_without_headers(self):
+        """HTTPDownload.get_rio_env should return empty dict when no headers present"""
+        plugin = self.get_download_plugin(self.product)
+        plugin.stream = mock.MagicMock()
+        plugin.stream.headers = {}
+
+        env = plugin.get_rio_env()
+
+        self.assertEqual(env, {})
+
+    def test_plugins_download_http_get_rio_env_without_stream(self):
+        """HTTPDownload.get_rio_env should return empty dict when no stream exists"""
+        plugin = self.get_download_plugin(self.product)
+
+        env = plugin.get_rio_env()
+
+        self.assertEqual(env, {})
+
 
 class TestDownloadPluginHttpRetry(BaseDownloadPluginTest):
     def setUp(self):

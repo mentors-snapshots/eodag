@@ -1398,6 +1398,26 @@ class HTTPDownload(Download):
                 total_size += asset.size
         return total_size
 
+    def get_rio_env(self) -> Dict[str, str]:
+        """Get rasterio environment configuration with GDAL HTTP headers.
+
+        Returns:
+            Dict containing GDAL_HTTP_HEADERS configuration if headers are set,
+            empty dict otherwise.
+        """
+        if not hasattr(self, 'stream') or not self.stream:
+            return {}
+
+        headers = self.stream.headers
+        if not headers:
+            return {}
+
+        # Format headers as "Header-Name: Value" joined with "\r\n"
+        formatted_headers = "\r\n".join(
+            f"{k}: {v}" for k, v in headers.items()
+        )
+
+        return {"GDAL_HTTP_HEADERS": formatted_headers} if formatted_headers else {}
     def download_all(
         self,
         products: SearchResult,
