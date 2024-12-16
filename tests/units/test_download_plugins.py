@@ -524,6 +524,18 @@ class TestDownloadPluginHttp(BaseDownloadPluginTest):
             "title": local_filename,
             "downloadLink": download_url,
             "productType": product_type,
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [0.0, 0.0],
+                        [1.0, 0.0],
+                        [1.0, 1.0],
+                        [0.0, 1.0],
+                        [0.0, 0.0]
+                    ]
+                ]
+            }
         }
         dl_config = config.PluginConfig.from_mapping({
             "base_uri": "fake_base_uri",

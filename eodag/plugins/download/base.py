@@ -220,15 +220,6 @@ class Download(PluginTopic):
         )
         if output_extension:
             fs_path += output_extension
-        elif hasattr(self, '_check_product_filename') and callable(getattr(self, '_check_product_filename')):
-            try:
-                filename = self._check_product_filename(product)
-                if filename and isinstance(filename, str):
-                    _, ext = os.path.splitext(filename)
-                    if ext:
-                        fs_path += ext
-            except Exception as e:
-                logger.debug(f"Error getting filename from _check_product_filename: {e}")
         fs_dir_path = (
             fs_path.replace(output_extension, "") if output_extension else fs_path
         )

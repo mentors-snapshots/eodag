@@ -653,7 +653,22 @@ class HTTPDownload(Download):
             fh.write(url)
         logger.debug("Download recorded in %s", record_filename)
 
-        # Check that the downloaded file is really a zip file
+        # Check if we need to update the extension based on the downloaded content
+        if hasattr(self, '_check_product_filename') and callable(getattr(self, '_check_product_filename')):
+            try:
+                filename = self._check_product_filename(product)
+                if filename and isinstance(filename, str):
+                    _, ext = os.path.splitext(filename)
+                    if ext:
+                        new_fs_path = fs_path.replace('.zip', '') + ext
+                        os.rename(fs_path, new_fs_path)
+                        fs_path = new_fs_path
+                        product.location = path_to_uri(fs_path)
+                        return fs_path
+            except Exception as e:
+                logger.debug(f"Error getting filename from _check_product_filename: {e}")
+
+        # Only check for zip files if we didn't get a specific extension
         if not zipfile.is_zipfile(fs_path) and output_extension == ".zip":
             logger.warning(
                 "Downloaded product is not a Zip File. Please check its file type before using it"
